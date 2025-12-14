@@ -1,63 +1,106 @@
-// server.js
 const express = require('express');
-const mongoose = require('mongoose');
-const db_url = 'mongodb+srv://fanizig8_db_user:cFFuYuBbFr35nlDG@notebookdatabase.ugjbrbx.mongodb.net/?appName=Notebookdatabase';
+const dotenv = require('dotenv');
+const cors = require('cors');
+const path = require('path');
+
+// Load env vars
+dotenv.config();
+
+// Import database connection
+const connectDB = require('./config/database');
+
+// Import middleware
+const securityMiddleware = require('./middleware/securityMiddleware');
+const { notFound, errorHandler } = require('./middleware/errorHandler');
+const { generalLimiter } = require('./middleware/rateLimiter');
+
+// Import routes
+const authRoutes = require('./auth/authroutes');
+const barberRoutes = require('./Barbers/barbersRoute/barbersRoute');
 const bookingRoutes = require('./Booking/bookingRoute/bookingRoute');
-const barbersRoutes = require('./Barbers/barbersRoute/barbersRoute');
+const scheduleRoutes = require('./schedule/scheduleroute');
 
+
+const availabilityRoutes = require('./Availability/availabilityRoutes');
+
+// Import jobs
+const { bookingReminderJob, cleanupOldBookings } = require('./Jobs/BppkingReminder');
+
+// Connect to database
+connectDB();
+
+// Initialize express
 const app = express();
-app.use(express.json());
 
-/* // Import our models (blueprints)
-const Barber = require('./Barbers/barbersModel/barbersModel');
-const Booking = require('./Booking/bookingModel/bookingModel');
+// Security middleware
+securityMiddleware(app);
 
-// 🎯 ROUTE 1: Get a barber's schedule for a specific day
-app.get('/api/barbers/:barberId/schedule', async (req, res) => {
-  try {
-    const { barberId } = req.params; // Get barber ID from URL
-    const { date } = req.query; // Get date from query parameters
+// Body parser
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-    console.log(`📅 Fetching schedule for barber ${barberId} on ${date}`);
+// CORS
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true,
+}));
 
-    // Find all bookings for this barber on this specific date
-    const bookings = await Booking.find({
-      barber: barberId,
-      bookingDate: new Date(date),
-      status: 'confirmed' // Only get confirmed bookings
-    }).populate('user', 'name'); // Also get user's name
+// Morgan for logging
+/* if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+} */
 
-    // Send the bookings back to frontend
-    res.json({
-      success: true,
-      data: bookings
-    });
+// Rate limiting
+app.use(generalLimiter);
 
-  } catch (error) {
-    console.error('❌ Error fetching schedule:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error while fetching schedule'
-    });
-  }
-}); */
+// Static folder
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
-// 🎯 ROUTE 2: Create a new booking
-app.use('/api/bookings', bookingRoutes);
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/barbers',((req,res,next)=>{
+  console.log('Accessing barber route') 
+  next()}),barberRoutes);
+app.use('/api/bookings',((req,res,next)=>{
+  console.log('Accessing bbokin route') 
+  next()}), bookingRoutes);
+app.use('/api/schedules', scheduleRoutes);
+app.use('/api/availability',((req,res,next)=>{
+  console.log('Accessing Availability route') 
+  next()}), availabilityRoutes);
 
-// 🎯 ROUTE 3: Get all barbers (for dropdown selection)
-app.use('/api/barbers', barbersRoutes);
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+  });
+});
 
-// Connect to MongoDB (our database)
-mongoose.connect(db_url, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('\n✅ Connected to MongoDB!'))
-.catch(err => console.log('❌ MongoDB connection error:', err));
+// 404 handler
+app.use(notFound);
 
-// Start the server
-const PORT = 5000;
+// Error handler
+app.use(errorHandler);
+
+// Start jobs in production
+if (process.env.NODE_ENV === 'production') {
+  bookingReminderJob.start();
+  cleanupOldBookings.start();
+  cleanupPendingPayments.start();
+}
+
+const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
-  console.log(`\n\n🚀 Server running on http://localhost:${PORT}`);
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.log(`Error: ${err.message}`);
+  // Close server & exit process
+  server.close(() => process.exit(1));
 });

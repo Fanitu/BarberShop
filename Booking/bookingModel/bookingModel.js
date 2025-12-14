@@ -1,30 +1,79 @@
-// models/Booking.js
 const mongoose = require('mongoose');
 
 const bookingSchema = new mongoose.Schema({
-  user: { 
-    type: mongoose.Schema.Types.ObjectId,  // This is like a link to the User
-    ref: 'User',  // Reference to User model
-    required: true 
-  },
-  barber: { 
+  client: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Barber',  // Reference to Barber model
-    required: true 
+    ref: 'User',
+    required: true,
   },
-  bookingDate: { 
-    type: Date, 
-    required: true  // Which day they want to book
+  barber: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Barber',
+    required: true,
   },
-  bookingTime: { 
-    type: String, 
-    required: true  // What time (like "14:30")
+  schedule: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Schedule',
+    required: true,
   },
-  status: { 
-    type: String, 
-    enum: ['confirmed', 'cancelled'],  // Can only be these two values
-    default: 'confirmed'  // Automatically set to 'confirmed'
-  }
-}, { timestamps: true });
+  service: {
+    name: String,
+    price: Number,
+    duration: Number,
+  },
+  bookingdate: {
+    type: Date,
+    required: true,
+  },
+  startTime: {
+    type: String,
+    required: true,
+  },
+  endTime: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'confirmed', 'completed', 'cancelled', 'no-show'],
+    default: 'pending',
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'partial', 'completed', 'refunded'],
+    default: 'pending',
+  },
+  downPayment: {
+    amount: Number,
+    receipt: String,
+    paidAt: Date,
+  },
+  totalAmount: {
+    type: Number,
+    required: true,
+  },
+  remainingAmount: {
+    type: Number,
+    default: 0,
+  },
+  notes: String,
+  reminderSent: {
+    type: Boolean,
+    default: false,
+  },
+  cancellationReason: String,
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+}, {
+  timestamps: true,
+});
+
+// Indexes for efficient queries
+bookingSchema.index({ client: 1, bookingdate: -1 });
+bookingSchema.index({ barber: 1, bookingdate: -1 });
+bookingSchema.index({ status: 1 });
+bookingSchema.index({ bookingdate: 1, startTime: 1 });
 
 module.exports = mongoose.model('Booking', bookingSchema);
