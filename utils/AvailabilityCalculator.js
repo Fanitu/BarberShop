@@ -6,6 +6,7 @@
  */
 
 const { parseTimeToMinutes, formatMinutesToTime} = require('./timeSlot');
+const moment = require('moment');
 
 class AvailabilityCalculator {
   /**
@@ -14,12 +15,13 @@ class AvailabilityCalculator {
    * @param {Array} bookings - Array of existing Booking documents
    * @param {number} bufferMinutes - Buffer between appointments (default: 5)
    */
-  constructor(barber, schedule = { bookings: [] }, bookings = [], bufferMinutes = 5) {
+  constructor(barber, schedule = { bookings: [] }, bookings = [], bufferMinutes = 5,date) {
     this.barber = barber;
     this.schedule = schedule;
     this.bookings = [...(schedule.bookings || []), ...bookings];
     this.bufferMinutes = bufferMinutes;
     this.minuteIncrement = barber.minimumSlotDuration || 15;
+    this.date = date;
   }
 
   /**
@@ -72,7 +74,34 @@ class AvailabilityCalculator {
       if (this.schedule.isWorkingDay === false) {
         continue; // Barber not working
       }
-      
+     // Function to get current time as "HH:MM"
+        function getCurrentHHMM() {
+          const now = new Date();
+          const hours = String(now.getHours()).padStart(2, '0');
+          const minutes = String(now.getMinutes()).padStart(2, '0');
+          return `${hours}:${minutes}`;
+        }
+
+        // Get and display current time
+        const currentTime = getCurrentHHMM();
+
+        const inputDate = this.date;
+
+        
+
+          function isTodayMoment(dateString) {
+              return moment(dateString).isSame(moment(), 'day');
+          }
+
+          // Usage
+          console.log(isTodayMoment(inputDate));
+
+
+      if(isTodayMoment(inputDate)){
+       if(parseTimeToMinutes(currentTime) > windowStart){
+        continue; // Skip past times
+      } 
+    }
       // ✅ ALL CHECKS PASSED - Window is available!
       availableWindows.push({
         startTime: formatMinutesToTime(windowStart),

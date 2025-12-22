@@ -27,6 +27,7 @@ exports.getAvailableTimes = async (req, res) => {
       });
     }
     
+    
     const duration = parseInt(serviceDuration);
     if (isNaN(duration) || duration <= 0) {
       return res.status(400).json({
@@ -63,8 +64,9 @@ exports.getAvailableTimes = async (req, res) => {
     
     // Parse date
     const scheduleDate = new Date(date);
+    /*
     scheduleDate.setUTCDate(0, 0, 0, 0);
-   /*  if(!isNaN(scheduleDate.valueOf())){
+     if(!isNaN(scheduleDate.valueOf())){
       return res.status(400).json({
         success: false,
         message: 'Invalid date format',
@@ -74,7 +76,6 @@ exports.getAvailableTimes = async (req, res) => {
     // Get or create schedule for the day
     let schedule = await Schedule.findOne({
       barber: barberId,
-      date: scheduleDate,
     });
     
     // If no schedule exists, create an empty one
@@ -104,20 +105,23 @@ exports.getAvailableTimes = async (req, res) => {
     // Get existing bookings for this day
     const existingBookings = await Booking.find({
       barber: barberId,
-      bookingDate: scheduleDate,
-      status: { $in: ['pending', 'confirmed'] },
+      bookingdate: scheduleDate,
+      status: { $in: ['pending', 'confirmed']},
     }).select('startTime endTime service');
+
     
     // Create availability calculator
     const calculator = new AvailabilityCalculator(
       barber,
       schedule,
       existingBookings,
-      5 // 5-minute buffer between appointments
+      5, // 5-minute buffer between appointments
+      scheduleDate
     );
     
     // Get available windows
     const availableWindows = calculator.getAvailableWindows(duration);
+    
     
     // Format for frontend
     const formattedWindows = availableWindows.map(window => ({
@@ -174,8 +178,9 @@ exports.getAvailableTimes = async (req, res) => {
         suggestions: this.generateSuggestions(formattedWindows, duration),
       },
     };
-    
+
     res.json(response);
+    
     
   } catch (error) {
     console.error('Error getting available times:', error);

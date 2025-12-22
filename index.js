@@ -19,6 +19,7 @@ const authRoutes = require('./auth/authroutes');
 const barberRoutes = require('./Barbers/barbersRoute/barbersRoute');
 const bookingRoutes = require('./Booking/bookingRoute/bookingRoute');
 const scheduleRoutes = require('./schedule/scheduleroute');
+const adminRoutes = require('./Admin/adminRoutes');
 
 
 const availabilityRoutes = require('./Availability/availabilityRoutes');
@@ -57,17 +58,23 @@ app.use(generalLimiter);
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // API Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth',((req,res,next)=>{
+  console.log('auth route accessed')
+  next()
+}), authRoutes);
 app.use('/api/barbers',((req,res,next)=>{
-  console.log('Accessing barber route') 
-  next()}),barberRoutes);
-app.use('/api/bookings',((req,res,next)=>{
-  console.log('Accessing bbokin route') 
-  next()}), bookingRoutes);
+  console.log('barbers route accessed')
+  next()
+}),barberRoutes);
+app.use('/api/bookings', bookingRoutes);
 app.use('/api/schedules', scheduleRoutes);
-app.use('/api/availability',((req,res,next)=>{
-  console.log('Accessing Availability route') 
-  next()}), availabilityRoutes);
+app.use('/api/availability',((req,res,next)=>
+  {
+    console.log("index avai accessed")
+    next()
+  }),availabilityRoutes);
+app.use('/api/admin', adminRoutes);
+
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

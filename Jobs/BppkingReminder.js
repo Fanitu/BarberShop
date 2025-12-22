@@ -35,6 +35,8 @@ const bookingReminderJob = cron.schedule('* * * * *', async () => {
     });
     
     console.log(`Found ${bookings.length} potential bookings for reminder.`);
+    
+          console.log(startOfToday);
     // --- END STEP 1 ---
 
     for (const booking of bookings) {

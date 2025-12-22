@@ -1,4 +1,5 @@
 const User = require('../Users/usersModel/userModel');
+const Barber = require('../Barbers/barbersModel/barbersModel')
 const jwt = require('jsonwebtoken');
 const { secret, expiresIn, refreshSecret, refreshExpiresIn } = require('../config/jwtConfig');
 const { sendWelcomeEmail } = require('../service/emailService');
@@ -149,17 +150,41 @@ exports.login = async (req, res) => {
     const token = generateToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
+    // Base user response
+    const userResponse = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+    };
+
+    // If user is a barber, include barber data
+    if (user.role === 'barber') {
+      // Find the barber profile
+      const barber = await Barber.findOne({ user: user._id });
+      
+      if (barber) {
+        // Add barber-specific data to the response
+        userResponse.barberId = barber._id;
+        userResponse.specialization = barber.specialization;
+        userResponse.photo = barber.photo;
+        userResponse.isAvailable = barber.isAvailable;
+        userResponse.experience = barber.experience;
+        userResponse.services = barber.services;
+      }
+    }
+
+    // If user is admin, include admin-specific data
+    if (user.role === 'admin') {
+      userResponse.isAdmin = true;
+    }
+
     res.json({
       success: true,
       token,
       refreshToken,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        phone: user.phone,
-      },
+      user: userResponse,
     });
   } catch (error) {
     res.status(500).json({
@@ -175,9 +200,45 @@ exports.login = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Base user response
+    const userResponse = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+    };
+
+    // If user is a barber, include barber data
+    if (user.role === 'barber') {
+      const barber = await Barber.findOne({ user: user._id });
+      
+      if (barber) {
+        userResponse.barberId = barber._id;
+        userResponse.specialization = barber.specialization;
+        userResponse.photo = barber.photo;
+        userResponse.isAvailable = barber.isAvailable;
+        userResponse.experience = barber.experience;
+        userResponse.services = barber.services;
+      }
+    }
+
+    // If user is admin
+    if (user.role === 'admin') {
+      userResponse.isAdmin = true;
+    }
+
     res.json({
       success: true,
-      user,
+      data: userResponse,
     });
   } catch (error) {
     res.status(500).json({

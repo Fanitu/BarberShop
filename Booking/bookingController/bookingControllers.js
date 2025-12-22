@@ -175,6 +175,119 @@ exports.getMyBookings = async (req, res) => {
   }
 };
 
+
+
+// @desc    Get all bookings (admin only)
+// @route   GET /api/bookings/all
+// @access  Private/Admin
+exports.getAllBookings = async (req, res) => {
+  try {
+    const { date, status, barberId } = req.query;
+    let query = {};
+
+    if (date) {
+      const filterDate = new Date(date);
+      filterDate.setHours(0, 0, 0, 0);
+      const nextDay = new Date(filterDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      
+      query.bookingdate = {
+        $gte: filterDate,
+        $lt: nextDay,
+      };
+    }
+
+    if (status) {
+      query.status = status;
+    }
+
+    if (barberId) {
+      query.barber = barberId;
+    }
+
+    const bookings = await Booking.find(query)
+      .populate('client', 'name phone email')
+      .populate('barber', 'specialization')
+      .populate({
+        path: 'barber',
+        populate: {
+          path: 'user',
+          select: 'name',
+        },
+      })
+      .sort({ bookingdate: -1, startTime: -1 });
+
+    res.json({
+      success: true,
+      count: bookings.length,
+      data: bookings,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @desc    Get booking statistics
+// @route   GET /api/bookings/stats
+// @access  Private/Admin
+exports.getBookingStats = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const stats = await Booking.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalBookings: { $sum: 1 },
+          totalRevenue: { $sum: "$totalAmount" },
+          pending: { $sum: { $cond: [{ $eq: ["$status", "pending"] }, 1, 0] } },
+          confirmed: { $sum: { $cond: [{ $eq: ["$status", "confirmed"] }, 1, 0] } },
+          completed: { $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } },
+          cancelled: { $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 1, 0] } },
+          todayBookings: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $gte: ["$bookingdate", today] },
+                    { $lt: ["$bookingdate", tomorrow] }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      }
+    ]);
+
+    res.json({
+      success: true,
+      data: stats[0] || {
+        totalBookings: 0,
+        totalRevenue: 0,
+        pending: 0,
+        confirmed: 0,
+        completed: 0,
+        cancelled: 0,
+        todayBookings: 0
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 // @desc    Get barber bookings
 // @route   GET /api/bookings/barber/:barberId
 // @access  Private/Barber
@@ -283,19 +396,11 @@ exports.updateBookingStatus = async (req, res) => {
       }
 
       // Verify payment receipt exists
-      if (!booking.downPayment.receipt) {
+     /*  if (!booking.downPayment.receipt) {
         return res.status(400).json({
           success: false,
           message: 'Cannot confirm booking without down payment receipt',
-        });
-      }
-
-      // Update payment status
-      await Payment.findOneAndUpdate(
-        { booking: bookingId, paymentType: 'down-payment' },
-        { status: 'verified', verifiedBy: req.user.id, verifiedAt: new Date() },
-        { new: true }
-      );
+        });*/
     }
 
     // Update booking
@@ -332,6 +437,9 @@ exports.updateBookingStatus = async (req, res) => {
 // @route   PUT /api/bookings/:id/cancel
 // @access  Private
 exports.cancelBooking = async (req, res) => {
+
+  console.log('Cancel booking request received');
+  console.log('Request params:', req.params,req.body);
   try {
     const bookingId = req.params.id;
     const { reason } = req.body;
@@ -344,6 +452,7 @@ exports.cancelBooking = async (req, res) => {
         message: 'Booking not found',
       });
     }
+    console.log(1111)
 
     // Check if client owns the booking
     if (booking.client.toString() !== req.user.id && req.user.role !== 'admin') {
@@ -399,6 +508,118 @@ exports.cancelBooking = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message,
+    });
+  }
+};
+
+// @desc    Get daily statistics
+// @route   GET /api/bookings/stats/daily
+// @access  Private/Admin
+exports.getDailyStats = async (req, res) => {
+  try {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    
+    const stats = await Booking.aggregate([
+      {
+        $match: {
+          bookingdate: { $gte: thirtyDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$bookingdate' } },
+          bookings: { $sum: 1 },
+          revenue: { $sum: '$totalAmount' },
+          pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
+          completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } }
+        }
+      },
+      { $sort: { '_id': 1 } }
+    ]);
+
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Get weekly statistics
+// @route   GET /api/bookings/stats/weekly
+// @access  Private/Admin
+exports.getWeeklyStats = async (req, res) => {
+  try {
+    const twelveWeeksAgo = new Date(Date.now() - 12 * 7 * 24 * 60 * 60 * 1000);
+    
+    const stats = await Booking.aggregate([
+      {
+        $match: {
+          bookingdate: { $gte: twelveWeeksAgo }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%U', date: '$bookingdate' } },
+          bookings: { $sum: 1 },
+          revenue: { $sum: '$totalAmount' },
+          pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
+          completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } }
+        }
+      },
+      { $sort: { '_id': 1 } }
+    ]);
+
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Get monthly statistics
+// @route   GET /api/bookings/stats/monthly
+// @access  Private/Admin
+exports.getMonthlyStats = async (req, res) => {
+  try {
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+    
+    const stats = await Booking.aggregate([
+      {
+        $match: {
+          bookingdate: { $gte: twelveMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m', date: '$bookingdate' } },
+          bookings: { $sum: 1 },
+          revenue: { $sum: '$totalAmount' },
+          pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
+          completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } }
+        }
+      },
+      { $sort: { '_id': 1 } }
+    ]);
+
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
     });
   }
 };

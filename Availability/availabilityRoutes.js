@@ -15,7 +15,11 @@ const {
 const { protect, optionalAuth } = require('../middleware/authMiddleware');
 
 // Public routes
-router.get('/barber/:barberId', getAvailableTimes);
+router.get('/barber/:barberId',((req,res,next)=>
+  {
+    console.log("routes avai accessed")
+    next()
+  }), getAvailableTimes);
 router.get('/barber/:barberId/multi-day', getMultiDayAvailability);
 router.post('/validate', validateBookingTime);
 
