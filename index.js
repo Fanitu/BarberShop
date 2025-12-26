@@ -3,18 +3,14 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
 
-// Load env vars
 dotenv.config();
 
-// Import database connection
 const connectDB = require('./config/database');
 
-// Import middleware
 const securityMiddleware = require('./middleware/securityMiddleware');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 const { generalLimiter } = require('./middleware/rateLimiter');
 
-// Import routes
 const authRoutes = require('./auth/authroutes');
 const barberRoutes = require('./Barbers/barbersRoute/barbersRoute');
 const bookingRoutes = require('./Booking/bookingRoute/bookingRoute');
