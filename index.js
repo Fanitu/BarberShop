@@ -81,7 +81,7 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   const allowedOrigins = [
-    'https://resolvebar.vercel.app',
+    'https://modern-barber-fe.vercel.app',
     'http://localhost:5173',
     'http://localhost:3000',
     'https://barber-shop-nine-kappa.vercel.app'
