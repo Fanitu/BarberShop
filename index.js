@@ -46,11 +46,6 @@ app.use(cors({
   credentials: true,
 }));
 
-// Morgan for logging
-/* if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-} */
-
 // Rate limiting
 app.use(generalLimiter);
 
@@ -63,6 +58,9 @@ app.use('/api/auth',((req,res,next)=>{
   next()
 }), authRoutes);
 app.use('/api/barbers',((req,res,next)=>{
+  console.log(process.env.CLIENT_URL)
+  next()
+}),((req,res,next)=>{
   console.log('barbers route accessed')
   next()
 }),barberRoutes);
