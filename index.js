@@ -27,9 +27,6 @@ const availabilityRoutes = require('./Availability/availabilityRoutes');
 // Import jobs
 const { bookingReminderJob, cleanupOldBookings } = require('./Jobs/BppkingReminder');
 
-// Connect to database
-
-// Initialize express
 const app = express();
 
 
