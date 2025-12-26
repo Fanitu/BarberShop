@@ -146,7 +146,6 @@ app.use(errorHandler);
 if (process.env.NODE_ENV === 'production') {
   bookingReminderJob.start();
   cleanupOldBookings.start();
-  cleanupPendingPayments.start();
 }
 
 const PORT = process.env.PORT || 5000;
