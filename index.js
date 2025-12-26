@@ -82,9 +82,7 @@ app.use((req, res, next) => {
   const origin = req.headers.origin;
   const allowedOrigins = [
     'https://modern-barber-fe.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://barber-shop-nine-kappa.vercel.app'
+    'https://frontend-brown-seven-34.vercel.app'
   ];
   
   if (allowedOrigins.includes(origin)) {
