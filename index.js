@@ -28,10 +28,11 @@ const availabilityRoutes = require('./Availability/availabilityRoutes');
 const { bookingReminderJob, cleanupOldBookings } = require('./Jobs/BppkingReminder');
 
 // Connect to database
-connectDB();
 
 // Initialize express
 const app = express();
+
+
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
@@ -153,6 +154,8 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
+
+connectDB();
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {

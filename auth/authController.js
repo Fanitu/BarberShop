@@ -2,7 +2,7 @@ const User = require('../Users/usersModel/userModel');
 const Barber = require('../Barbers/barbersModel/barbersModel')
 const jwt = require('jsonwebtoken');
 const { secret, expiresIn, refreshSecret, refreshExpiresIn } = require('../config/jwtConfig');
-const { sendWelcomeEmail } = require('../service/emailService');
+const { sendWelcomeEmail } = require('../service/emailService.js');
 
 // Generate JWT Token
 const generateToken = (id) => {
