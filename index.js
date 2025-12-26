@@ -36,8 +36,8 @@ const app = express();
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
-      'https://resolvebar.vercel.app',
-      'http://localhost:5173',
+      'https://modern-barber-fe.vercel.app',
+      'https://frontend-brown-seven-34.vercel.app',
       'http://localhost:3000',
       'https://barber-shop-nine-kappa.vercel.app'
     ];
