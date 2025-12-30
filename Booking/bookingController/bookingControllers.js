@@ -454,12 +454,12 @@ exports.cancelBooking = async (req, res) => {
     }
 
     // Check if client owns the booking
-    if (booking.client.toString() !== req.user.id && req.user.role !== 'admin' || req.user.role !== 'barber') {
+  /*   if (booking.client.toString() !== req.user.id && req.user.role !== 'admin' || req.user.role !== 'barber') {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to cancel this booking',
       });
-    }
+    } */
 
     // Only pending or confirmed bookings can be cancelled by client
     if (!['pending', 'confirmed'].includes(booking.status)) {
