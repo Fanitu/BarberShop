@@ -453,6 +453,7 @@ exports.cancelBooking = async (req, res) => {
         message: 'Booking not found',
       });
     }
+  console.log(booking)
 console.log(2222)
     // Check if client owns the booking
   /*   if (booking.client.toString() !== req.user.id && req.user.role !== 'admin' || req.user.role !== 'barber') {
