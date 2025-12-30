@@ -443,7 +443,6 @@ exports.cancelBooking = async (req, res) => {
   try {
     console.log(11111)
     const bookingId = req.params.id;
-    const { reason } = req.body;
 
     const booking = await Booking.findById(bookingId);
 
@@ -453,7 +452,6 @@ exports.cancelBooking = async (req, res) => {
         message: 'Booking not found',
       });
     }
-  console.log(booking)
 console.log(2222)
     // Check if client owns the booking
   /*   if (booking.client.toString() !== req.user.id && req.user.role !== 'admin' || req.user.role !== 'barber') {
@@ -491,6 +489,8 @@ console.log(3333)
     
     // Free up the slot
     const schedule = await Schedule.findById(booking.schedule);
+    console.log(schedule);
+    console.log(44444)
     if (schedule && schedule.slots[booking.slotIndex]) {
       schedule.slots[booking.slotIndex].status = 'available';
       schedule.slots[booking.slotIndex].booking = null;
