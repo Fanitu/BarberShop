@@ -441,6 +441,7 @@ exports.cancelBooking = async (req, res) => {
   console.log('Cancel booking request received');
   console.log('Request params:', req.params,req.body);
   try {
+    console.log(11111)
     const bookingId = req.params.id;
     const { reason } = req.body;
 
@@ -452,7 +453,7 @@ exports.cancelBooking = async (req, res) => {
         message: 'Booking not found',
       });
     }
-
+console.log(2222)
     // Check if client owns the booking
   /*   if (booking.client.toString() !== req.user.id && req.user.role !== 'admin' || req.user.role !== 'barber') {
       return res.status(403).json({
@@ -468,7 +469,7 @@ exports.cancelBooking = async (req, res) => {
         message: `Cannot cancel a ${booking.status} booking`,
       });
     }
-
+console.log(3333)
     // Check if booking is within cancellation window (e.g., 2 hours before)
    /*  const bookingDateTime = new Date(booking.bookingdate);
     const [hours, minutes] = booking.startTime.split(':');
@@ -495,7 +496,7 @@ exports.cancelBooking = async (req, res) => {
       schedule.slots[booking.slotIndex].booking = null;
       await schedule.save();
     }
-
+console.log(5555)
     await booking.save();
 
     res.json({
