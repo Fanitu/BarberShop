@@ -488,14 +488,14 @@ console.log(3333)
     booking.status = 'cancelled';
     
     // Free up the slot
-    const schedule = await Schedule.findById(booking.schedule);
+    const schedule = await Schedule.findOneAndDelete(booking.schedule);
     console.log(schedule);
     console.log(44444)
-    if (schedule && schedule.slots[booking.slotIndex]) {
+   /*  if (schedule && schedule.slots[booking.slotIndex]) {
       schedule.slots[booking.slotIndex].status = 'available';
       schedule.slots[booking.slotIndex].booking = null;
       await schedule.save();
-    }
+    } */
 console.log(5555)
     await booking.save();
 
