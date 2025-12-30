@@ -452,10 +452,9 @@ exports.cancelBooking = async (req, res) => {
         message: 'Booking not found',
       });
     }
-    console.log(1111)
 
     // Check if client owns the booking
-    if (booking.client.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (booking.client.toString() !== req.user.id && req.user.role !== 'admin' || req.user.role !== 'barber') {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to cancel this booking',
@@ -471,7 +470,7 @@ exports.cancelBooking = async (req, res) => {
     }
 
     // Check if booking is within cancellation window (e.g., 2 hours before)
-    const bookingDateTime = new Date(booking.bookingdate);
+   /*  const bookingDateTime = new Date(booking.bookingdate);
     const [hours, minutes] = booking.startTime.split(':');
     bookingDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
     
@@ -483,7 +482,7 @@ exports.cancelBooking = async (req, res) => {
         success: false,
         message: 'Cannot cancel booking less than 2 hours before appointment',
       });
-    }
+    } */
 
     // Update booking
     booking.status = 'cancelled';
