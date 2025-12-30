@@ -43,7 +43,7 @@ router.get(
 router.put(
   '/:id/cancel',
   protect,
-  authorize('client'),
+ authorize('barber', 'admin','client'),
   cancelBooking
 );
 
