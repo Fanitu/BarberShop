@@ -487,7 +487,6 @@ console.log(3333)
 
     // Update booking
     booking.status = 'cancelled';
-    booking.cancellationReason = reason;
     
     // Free up the slot
     const schedule = await Schedule.findById(booking.schedule);
