@@ -77,8 +77,14 @@ class AvailabilityCalculator {
      // Function to get current time as "HH:MM"
         function getCurrentHHMM() {
           const now = new Date();
+          
+          // Add 3 hours to your local time
+          const offsetHours = 3; // Change this to your needed offset
+          now.setHours(now.getHours() + offsetHours);
+          
           const hours = String(now.getHours()).padStart(2, '0');
           const minutes = String(now.getMinutes()).padStart(2, '0');
+          
           return `${hours}:${minutes}`;
         }
 
