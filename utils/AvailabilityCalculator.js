@@ -76,15 +76,18 @@ class AvailabilityCalculator {
       }
      // Function to get current time as "HH:MM"
         function getCurrentHHMM() {
-          // 'Africa/Addis_Ababa' is the IANA timezone for Ethiopia
+          const now = new Date();
+          
+          // Create time for Ethiopia (UTC+3)
+          const ethiopiaTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
+          
           const formatter = new Intl.DateTimeFormat('en-US', {
-            timeZone: 'Africa/Addis_Ababa',
             hour: '2-digit',
             minute: '2-digit',
-            hour12: false
+            hour12: true
           });
           
-          return formatter.format(new Date());
+          return formatter.format(ethiopiaTime);
         }
 
         // Get and display current time
