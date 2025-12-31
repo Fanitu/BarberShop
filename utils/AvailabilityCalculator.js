@@ -95,7 +95,7 @@ class AvailabilityCalculator {
 
           // Usage
           console.log('input Date')
-          console.log(isTodayMoment(inputDate));
+          console.log(inputDate);
           console.log('current time')
           console.log(currentTime);
 
