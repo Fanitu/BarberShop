@@ -98,7 +98,7 @@ class AvailabilityCalculator {
 
 
       if(isTodayMoment(inputDate)){
-       if(parseTimeToMinutes(currentTime) > windowStart){
+       if((parseTimeToMinutes(currentTime) + 100)> windowStart){
         continue; // Skip past times
       } 
     }
